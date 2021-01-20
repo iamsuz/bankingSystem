@@ -5,6 +5,7 @@ const schema = require('./schema/schema')
 const app = express();
 
 // connect to the mysql database
+require('./db');
 
 
 // middleware for graphql

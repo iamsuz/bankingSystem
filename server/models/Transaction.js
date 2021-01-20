@@ -1,32 +1,34 @@
 const Sequelize = require('sequelize');
 const conn = require('../db');
 
-module.exports = conn.define('Account',{
+
+// transaction type is binary as 0 is debit and 1 credit
+
+module.exports = conn.define('Transactions',{
 	id:{
 		type:Sequelize.INTEGER,
 		allowNull: false,
 		autoIncrement: true,
 		primaryKey: true
 	},
-	number:{
-		type:Sequelize.INTEGER(11),
-		allowNull: false,
-		unique: true
+	type:{
+		type:Sequelize.BOOLEAN,
+		allowNull: false
 	},
-	balance:{
+	amount:{
 		type: Sequelize.INTEGER(11)
 	},
-	userId:{
+	from:{
 		type: Sequelize.INTEGER,
 		references:{
-			model: 'User',
+			model: 'Account',
 			key:'id'
 		}
 	},
-	bankId:{
+	to:{
 		type: Sequelize.INTEGER,
 		references:{
-			model: 'Bank',
+			model: 'Account',
 			key:'id'
 		}
 	},

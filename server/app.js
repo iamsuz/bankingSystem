@@ -1,9 +1,17 @@
 const express = require('express');
-const {graphqlHTTP} = require('express-graphql')
+const {graphqlHTTP} = require('express-graphql');
+const schema = require('./schema/schema')
 
 const app = express();
 
-app.use('/api',graphqlHTTP({}))
+// connect to the mysql database
+
+
+// middleware for graphql
+app.use('/api',graphqlHTTP({
+	schema,
+	graphiql:true
+}))
 
 
 // initiates the server

@@ -2,12 +2,13 @@ const graphql = require('graphql');
 
 const _ = require('lodash');
 
-const {GraphQLObjectType,GraphQLString,GraphQLSchema,GraphQLID,GraphQLInt,GraphQLList,GraphQLBoolean} = graphql;
+const {GraphQLObjectType,GraphQLString,GraphQLSchema,GraphQLID,GraphQLInt,GraphQLList,GraphQLBoolean,GraphQLDate} = graphql;
+const { Op,DATE } = require("sequelize");
 
-const users = require('../models/User');
-const accounts = require('../models/Account');
-const banks = require('../models/Bank');
-const transactions = require('../models/Transaction');
+const User = require('../models/User');
+const Account = require('../models/Account');
+const Bank = require('../models/Bank');
+const Transaction = require('../models/Transaction');
 
 // var users = [
 // {name:'Sujit M',username:'iamsujit',id:'1'},
@@ -46,18 +47,48 @@ const BankType = new GraphQLObjectType({
 const AccountType = new GraphQLObjectType({
 	name:'Account',
 	fields:()=>({
+		id:{type:GraphQLID},
 		number:{type:GraphQLID},
 		balance:{type:GraphQLInt},
+		createdAt:{
+			type:GraphQLString
+		},
+		updatedAt:{
+			type:GraphQLString
+		},
 		user:{
 			type: UserType,
 			resolve(parent,args){
-				return _.find(users,{id: parent.userId})
+				//return _.find(users,{id: parent.userId})
+				return User.findOne({
+					where:{
+						id:parent.userId
+					}
+				})
 			}
 		},
 		bank:{
 			type:BankType,
 			resolve(parent,args){
-				return _.find(banks,{id:parent.bankId})
+				//return _.find(banks,{id:parent.bankId})
+				return Bank.findOne({
+					where:{
+						id:parent.bankId
+					}
+				})
+			}
+		},
+		transactions:{
+			type: new GraphQLList(TransactionType),
+			resolve(parent,args){
+				return Transaction.findAll({
+					where:{
+						[Op.or]:{
+							from:parent.id,
+							to:parent.id
+						}
+					}
+				})
 			}
 		}
 	})
@@ -72,7 +103,12 @@ const UserType = new GraphQLObjectType({
 		accounts:{
 			type: new GraphQLList(AccountType),
 			resolve(parent,args){
-				return _.filter(accounts,{userId:parent.id})
+				//return _.filter(accounts,{userId:parent.id})
+				return Account.findAll({
+					where:{
+						userId:parent.id
+					}
+				})
 			}
 		}
 	})
@@ -90,16 +126,24 @@ const TransactionType = new GraphQLObjectType({
 			type:AccountType,
 			description:'From account number',
 			resolve(parent,args){
-				console.log(parent)
-				return _.find(accounts,{number:parent.from})
+				//return _.find(accounts,{number:parent.from})
+				return Account.findOne({
+					where:{
+						number:parent.from
+					}
+				})
 			}
 		},
 		to:{
 			type:AccountType,
 			description:'To account number',
 			resolve(parent,args){
-				console.log(parent)
-				return _.find(accounts,{number:parent.to})
+				//return _.find(accounts,{number:parent.to})
+				return Account.findOne({
+					where:{
+						number:parent.to
+					}
+				})
 			}
 		},
 		amount:{
@@ -118,14 +162,23 @@ const RootQuery = new GraphQLObjectType({
 			args:{id:{type:GraphQLID}},
 			resolve(parent,args){
 				// returns data from DB
-				return _.find(banks,{id:args.id})
+				return Bank.findOne({
+					where:{
+						id:args.id
+					}
+				})
 			}
 		},
 		account:{
 			type: AccountType,
 			args:{number:{type:GraphQLID}},
 			resolve(parent,args){
-				return _.find(accounts,{number:args.number})
+				//return _.find(accounts,{number:args.number})
+				return Account.findOne({
+					where:{
+						number:args.number
+					}
+				})
 			}
 		},
 		user:{
@@ -133,14 +186,40 @@ const RootQuery = new GraphQLObjectType({
 			args:{id:{type:GraphQLID}},
 			resolve(parent,args){
 				// returns data from DB
-				return _.find(users,{id:args.id})
+				return User.findOne({
+					where:{
+						id:args.id
+					}
+				})
 			}
 		},
 		transaction:{
 			type:TransactionType,
 			args:{id:{type:GraphQLID}},
 			resolve(parent,args){
-				return _.find(transaction,{id:args.id})
+				return Transaction.findOne({
+					where:{
+						id:args.id
+					}
+				})
+			}
+		},
+		users:{
+			type:new GraphQLList(UserType),
+			resolve(parent,args){
+				return User.findAll()
+			}
+		},
+		banks:{
+			type: new GraphQLList(BankType),
+			resolve(parent,args){
+				return Bank.findAll()
+			}
+		},
+		accounts:{
+			type: new GraphQLList(AccountType),
+			resolve(parent,args){
+				return Account.findAll()
 			}
 		}
 	}	
@@ -157,9 +236,114 @@ const Mutation = new GraphQLObjectType({
 				username:{type:GraphQLString}
 			},
 			resolve(parent,args){
-				let user = new User({
+				return User.create({
 					name:args.name,
 					username: args.username
+				})
+			}
+		},
+		addBank:{
+			type:BankType,
+			args:{
+				name:{type:GraphQLString},
+				address:{type:GraphQLString}
+			},
+			resolve(parent,args){
+				return Bank.create({
+					name:args.name,
+					address:args.address
+				})
+			}
+		},
+		createAccount:{
+			type:AccountType,
+			description:"Account number will be auto generate and balance will be default zero but you can add balance at the start of opening account",
+			args:{
+				userId:{type:GraphQLID},
+				bankId:{type:GraphQLID},
+				balance:{type:GraphQLInt}
+			},
+			resolve(parent,args){
+				const accountNumber = Math.floor(Math.random()*100000000);
+				return Account.create({
+					number:accountNumber,
+					userId:args.userId,
+					bankId:args.bankId,
+					balance:args.balance
+				})
+			}
+		},
+		createTransaction:{
+			type:TransactionType,
+			description:'From and To are the Account Numbers',
+			args:{
+				from:{type:GraphQLID},
+				to:{type:GraphQLID},
+				amount:{type:GraphQLInt}
+			},
+			resolve(parent,args){
+				console.log(args);
+				return Account.findOne({
+					where:{
+						id:args.from
+					}
+				}).then(account=>{
+					account.update({balance: account.dataValues.balance - args.amount})
+					if(account.dataValues.balance >= args.amount){
+						Account.findOne({
+							where:{
+								id:args.to
+							}
+						}).then(toAcc=>{
+							toAcc.update({
+								balance: toAcc.dataValues.balance + args.amount
+							})
+							return Transaction.create({
+								type:0,
+								from:account.id,
+								to:toAcc.id,
+								amount:args.amount
+							})
+						})
+					}else{
+						throw new Error(`${args.from} Account does not have enough balance`)
+					}
+				}).catch(err=>{
+					return err;
+				})
+				
+			}
+		},
+		creditTransaction:{
+			type:TransactionType,
+			description:"Credit transaction is only to deposit money to selected account",
+			args:{
+				to:{type:GraphQLID},
+				amount:{type:GraphQLInt}
+			},
+			resolve(parent,args){
+				console.log(args.to)
+				return Account.findOne({
+					where:{
+						id:args.to
+					}
+				}).then(account=>{
+					console.log(account)
+					if(args.amount > 0){
+						account.update({
+							balance: account.dataValues.balance + args.amount
+						})
+						return Transaction.create({
+							type:1,
+							from:null,
+							to:args.to,
+							amount:args.amount
+						})
+					}else{
+						throw new Error(`${args.amount} amount is not valid`)
+					}
+				}).catch(err=>{
+					return err;
 				})
 			}
 		}
@@ -168,5 +352,6 @@ const Mutation = new GraphQLObjectType({
 
 
 module.exports = new GraphQLSchema({
-	query:RootQuery
+	query:RootQuery,
+	mutation:Mutation
 })

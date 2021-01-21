@@ -1,8 +1,13 @@
 const express = require('express');
 const {graphqlHTTP} = require('express-graphql');
-const schema = require('./schema/schema')
+const schema = require('./schema/schema');
+const cors = require('cors');
 
 const app = express();
+
+// Allow cross origin requests
+app.use(cors());
+
 
 // connect to the mysql database
 require('./db');
@@ -16,6 +21,6 @@ app.use('/api',graphqlHTTP({
 
 
 // initiates the server
-app.listen(3000,()=>{
-	console.log('Now server is listening on 3000')
+app.listen(4000,()=>{
+	console.log('Now server is listening on 4000')
 })

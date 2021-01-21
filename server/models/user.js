@@ -7,10 +7,12 @@ module.exports = conn.define('User',{
 		allowNull: false,
 		autoIncrement: true,
 		primaryKey: true
-	}
-	name: Sequelize.STRING(255),
-	username: {
+	},
+	name: {
 		type:Sequelize.STRING(255)
+	},
+	username: {
+		type:Sequelize.STRING(255),
 		allowNull:false,
 		unique:true
 	},

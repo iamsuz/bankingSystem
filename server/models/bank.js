@@ -7,7 +7,7 @@ module.exports = conn.define('Bank',{
 		allowNull: false,
 		autoIncrement: true,
 		primaryKey: true
-	}
+	},
 	name: Sequelize.STRING(255),
 	address: Sequelize.TEXT,
 	createdAt: {

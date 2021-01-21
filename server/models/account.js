@@ -14,7 +14,9 @@ module.exports = conn.define('Account',{
 		unique: true
 	},
 	balance:{
-		type: Sequelize.INTEGER(11)
+		type: Sequelize.INTEGER(11),
+		allowNull:false,
+		defaultValue: 0
 	},
 	userId:{
 		type: Sequelize.INTEGER,

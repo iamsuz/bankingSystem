@@ -1,4 +1,5 @@
 #server
+	
 	You need to install sequelize globally
 
 		npm install sequelize -g

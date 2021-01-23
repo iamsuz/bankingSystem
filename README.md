@@ -1,3 +1,7 @@
+**Banking System
+
+This is a project to demonstarate the basic banking structure using GraphQL Server and React Client
+
 #server
 	
 	You need to install sequelize globally

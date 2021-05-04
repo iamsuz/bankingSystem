@@ -1,10 +1,10 @@
-#Side Project
+Side Project
 
-##Banking System
+Banking System
 
 This is a project to demonstarate the basic banking structure using GraphQL Server and React Client
 
-##server
+server
 	
 	You need to install sequelize globally
 
@@ -30,7 +30,7 @@ This is a project to demonstarate the basic banking structure using GraphQL Serv
 
 		server will start running on port 4000
 
-##client
+client
 	
 	go to client dir and install the dependencies npm install
 	once its complete start the react server 
